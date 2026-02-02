@@ -1,0 +1,25 @@
+{
+    "name": "autosquare-shared",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "main": "./types/index.js",
+    "types": "./types/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./types/index.js",
+            "types": "./types/index.d.ts"
+        },
+        "./types/*": {
+            "import": "./types/*.js",
+            "types": "./types/*.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc --watch"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.0"
+    }
+}

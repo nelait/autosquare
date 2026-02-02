@@ -1,0 +1,140 @@
+.diagnosis-page {
+    min-height: calc(100vh - 80px);
+    padding: var(--spacing-xl) 0 var(--spacing-3xl);
+}
+
+.diagnosis-page .container {
+    max-width: 900px;
+}
+
+.diagnosis-page .page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.diagnosis-page .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+    text-decoration: none;
+    transition: color var(--transition-normal);
+}
+
+.diagnosis-page .back-btn:hover {
+    color: var(--color-text);
+}
+
+.header-content h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.header-content p {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+}
+
+.vehicle-context {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.context-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.context-vehicle {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.context-vin {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.no-vehicle-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    background: var(--gradient-surface);
+}
+
+.notice-icon {
+    font-size: 1.5rem;
+}
+
+.notice-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.notice-content p {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+.diagnosis-container {
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.results-section {
+    margin-top: var(--spacing-2xl);
+}
+
+.analyzed-symptoms {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+}
+
+.analyzed-symptoms .symptoms-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.analyzed-symptoms .symptoms-text {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+@media (max-width: 640px) {
+    .header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .vehicle-context {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .notice-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -1,0 +1,216 @@
+.vehicle-page {
+    min-height: calc(100vh - 80px);
+    padding: var(--spacing-xl) 0;
+}
+
+.vehicle-page .container {
+    max-width: 1000px;
+}
+
+.vehicle-page.loading-state,
+.vehicle-page.error-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.loader-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--color-surface);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loader p {
+    color: var(--color-text-secondary);
+}
+
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-3xl);
+    max-width: 500px;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.error-container h2 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.error-container p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.error-vin code {
+    font-family: var(--font-mono);
+    background: var(--color-surface);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: var(--spacing-sm);
+    transition: color var(--transition-normal);
+}
+
+.back-btn:hover {
+    color: var(--color-text);
+}
+
+.page-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.page-breadcrumb a {
+    color: var(--color-text-secondary);
+}
+
+.page-breadcrumb a:hover {
+    color: var(--color-primary-light);
+}
+
+.recall-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.recall-alert-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.alert-icon {
+    font-size: 2rem;
+}
+
+.recall-alert-content strong {
+    display: block;
+    color: var(--color-danger-light);
+}
+
+.recall-alert-content p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.quick-actions {
+    margin-top: var(--spacing-2xl);
+}
+
+.quick-actions h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text-secondary);
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    text-decoration: none;
+    transition: all var(--transition-normal);
+}
+
+.action-card:hover {
+    transform: translateX(5px);
+    border-color: var(--color-primary);
+}
+
+.action-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-content h4 {
+    font-size: 1rem;
+    margin-bottom: 2px;
+    color: var(--color-text);
+}
+
+.action-content p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+.action-arrow {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    transition: transform var(--transition-normal);
+}
+
+.action-card:hover .action-arrow {
+    transform: translateX(5px);
+    color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .recall-alert {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+    }
+
+    .recall-alert-content {
+        flex-direction: column;
+    }
+}
