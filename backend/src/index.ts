@@ -13,6 +13,12 @@ import { URL } from 'url';
 import { config } from './config/index.js';
 import { registerTools, handleToolCall } from './tools/index.js';
 import { registerResources, handleResourceRead } from './resources/index.js';
+import { verifyToken, getAuthHeader, AuthUser } from './auth/middleware.js';
+import { logUserAction } from './services/auditService.js';
+import { initializeFirebase } from './config/firebase.js';
+
+// Initialize Firebase Admin SDK
+initializeFirebase();
 
 // Create MCP Server
 function createMCPServer() {
@@ -64,7 +70,7 @@ const httpServer = http.createServer(async (req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
@@ -106,13 +112,27 @@ const httpServer = http.createServer(async (req, res) => {
     }
 
     // Simple JSON-RPC style API for direct tool calls (non-MCP clients)
+    // Now with authentication
     if (url.pathname === '/api/tools' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', async () => {
             try {
+                // Verify authentication
+                const authHeader = getAuthHeader(req.headers);
+                const user = await verifyToken(authHeader);
+
+                if (!user) {
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: 'Unauthorized',
+                        message: 'Valid authentication token required'
+                    }));
+                    return;
+                }
+
                 const { tool, arguments: args } = JSON.parse(body);
-                const result = await handleToolCall(tool, args || {});
+                const result = await handleToolCall(tool, args || {}, user);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(result));
             } catch (error) {
@@ -123,10 +143,46 @@ const httpServer = http.createServer(async (req, res) => {
         return;
     }
 
-    // List available tools
+    // List available tools (public - no auth required)
     if (url.pathname === '/api/tools' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ tools: registerTools() }));
+        return;
+    }
+
+    // Auth event logging endpoint
+    if (url.pathname === '/api/auth/log' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+            try {
+                const authHeader = getAuthHeader(req.headers);
+                const user = await verifyToken(authHeader);
+
+                if (!user) {
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Unauthorized' }));
+                    return;
+                }
+
+                const { action } = JSON.parse(body);
+
+                if (action === 'LOGIN' || action === 'SIGNUP' || action === 'LOGOUT') {
+                    await logUserAction({
+                        userId: user.uid,
+                        userEmail: user.email,
+                        action,
+                        metadata: {},
+                    });
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } catch (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }));
+            }
+        });
         return;
     }
 
@@ -144,6 +200,7 @@ httpServer.listen(PORT, () => {
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`MCP SSE endpoint: http://localhost:${PORT}/sse`);
     console.log(`API endpoint: http://localhost:${PORT}/api/tools`);
+    console.log(`Auth logging: http://localhost:${PORT}/api/auth/log`);
 });
 
 process.on('SIGINT', () => {

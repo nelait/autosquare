@@ -10,6 +10,7 @@ const Header = () => {
 
     const navItems = [
         { path: '/', label: 'Home', icon: '🏠' },
+        { path: '/my-vehicles', label: 'My Vehicles', icon: '🚗' },
         { path: '/lookup', label: 'VIN Lookup', icon: '🔍' },
         { path: '/diagnosis', label: 'Diagnosis', icon: '🔧' },
     ];

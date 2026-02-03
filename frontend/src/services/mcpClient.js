@@ -1,25 +1,43 @@
 // MCP Backend Client Service
 // Connects React frontend to the deployed MCP server
 
+import { getIdToken } from './authService';
+
 const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'https://autosquare-mcp-446953879113.us-central1.run.app';
 
 /**
- * Call an MCP tool on the backend
+ * Get auth headers with Firebase ID token
+ */
+async function getAuthHeaders() {
+    const token = await getIdToken();
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+}
+
+/**
+ * Call an MCP tool on the backend (authenticated)
  */
 async function callTool(toolName, args) {
+    const headers = await getAuthHeaders();
+
     const response = await fetch(`${MCP_SERVER_URL}/api/tools`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
             tool: toolName,
             arguments: args,
         }),
     });
 
+    if (response.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+    }
+
     if (!response.ok) {
-        throw new Error(`MCP Server error: ${response.status}`);
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.message || error.error || `MCP Server error: ${response.status}`);
     }
 
     const result = await response.json();
@@ -30,6 +48,22 @@ async function callTool(toolName, args) {
     }
 
     return result;
+}
+
+/**
+ * Log an authentication event
+ */
+export async function logAuthEvent(action) {
+    try {
+        const headers = await getAuthHeaders();
+        await fetch(`${MCP_SERVER_URL}/api/auth/log`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action }),
+        });
+    } catch (error) {
+        console.error('Failed to log auth event:', error);
+    }
 }
 
 /**
@@ -93,6 +127,38 @@ export async function getRecalls(params) {
     return callTool('get_recalls', params);
 }
 
+// ============ User Vehicle Management ============
+
+/**
+ * Get the authenticated user's saved vehicles
+ */
+export async function getMyVehicles() {
+    return callTool('get_my_vehicles', {});
+}
+
+/**
+ * Add a vehicle to the user's collection
+ */
+export async function addMyVehicle(vehicle) {
+    return callTool('add_my_vehicle', vehicle);
+}
+
+/**
+ * Remove a vehicle from the user's collection
+ */
+export async function removeMyVehicle(vin) {
+    return callTool('remove_my_vehicle', { vin });
+}
+
+/**
+ * Update a vehicle's nickname
+ */
+export async function updateVehicleNickname(vin, nickname) {
+    return callTool('update_vehicle_nickname', { vin, nickname });
+}
+
+// ============ Utility Functions ============
+
 /**
  * Check if backend is available
  */
@@ -124,6 +190,11 @@ export default {
     getRepairProcedure,
     lookupVehicle,
     getRecalls,
+    getMyVehicles,
+    addMyVehicle,
+    removeMyVehicle,
+    updateVehicleNickname,
     checkHealth,
     getAvailableTools,
+    logAuthEvent,
 };
