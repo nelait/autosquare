@@ -36,27 +36,30 @@ const VehiclePage = () => {
                 const result = await lookupVehicle(vin);
 
                 if (result && result.vehicle) {
-                    // Transform NHTSA data to match our vehicle format
+                    const v = result.vehicle;
+                    // Map NHTSA data - backend returns nested engine object
                     const vehicleData = {
                         vin: vin,
-                        make: result.vehicle.make || 'Unknown',
-                        model: result.vehicle.model || 'Unknown',
-                        year: result.vehicle.year || 'Unknown',
-                        trim: result.vehicle.trim || '',
+                        make: v.make || 'Unknown',
+                        model: v.model || 'Unknown',
+                        year: v.year || 'Unknown',
+                        trim: v.trim || '',
                         engine: {
-                            type: result.vehicle.engineType || result.vehicle.fuelType || 'Unknown',
-                            horsepower: result.vehicle.horsepower || 'N/A',
-                            torque: 'N/A',
-                            fuelType: result.vehicle.fuelType || 'Unknown'
+                            type: v.engine?.type || v.electrificationLevel || 'Unknown',
+                            horsepower: v.engine?.horsepower || 'N/A',
+                            torque: v.engine?.torque || 'N/A',
+                            fuelType: v.engine?.fuelType || 'Unknown'
                         },
-                        transmission: result.vehicle.transmission || 'Unknown',
-                        drivetrain: result.vehicle.driveType || 'Unknown',
-                        bodyType: result.vehicle.bodyClass || 'Unknown',
-                        exteriorColor: 'Not Available',
-                        interiorColor: 'Not Available',
-                        mileage: 'Unknown',
-                        image: getDefaultImage(result.vehicle.make),
-                        features: []
+                        transmission: v.transmission || 'Unknown',
+                        drivetrain: v.drivetrain || 'Unknown',
+                        bodyType: v.bodyClass || v.vehicleType || 'Unknown',
+                        exteriorColor: v.exteriorColor || 'Not Available',
+                        interiorColor: v.interiorColor || 'Not Available',
+                        mileage: v.mileage || 'Unknown',
+                        image: getDefaultImage(v.make),
+                        features: v.features || [],
+                        electrificationLevel: v.electrificationLevel,
+                        plantCountry: v.plantCountry
                     };
 
                     setVehicle(vehicleData);

@@ -57,27 +57,59 @@ export const nhtsaClient = {
                 return null;
             }
 
+            // Determine engine type - handle electric vehicles
+            const fuelType = getValueFromResults(results, 'Fuel Type - Primary');
+            const electrificationLevel = getValueFromResults(results, 'Electrification Level');
+            const evDriveUnit = getValueFromResults(results, 'EV Drive Unit');
+            const cylinders = getValueFromResults(results, 'Engine Number of Cylinders');
+            const displacement = getValueFromResults(results, 'Displacement (L)');
+            const engineConfig = getValueFromResults(results, 'Engine Configuration');
+            const otherEngineInfo = getValueFromResults(results, 'Other Engine Info');
+
+            let engineType = '';
+            if (fuelType === 'Electric' || electrificationLevel?.includes('EV') || electrificationLevel?.includes('Electric')) {
+                // Electric vehicle
+                engineType = evDriveUnit || electrificationLevel || 'Electric Motor';
+                if (otherEngineInfo) {
+                    engineType = otherEngineInfo;
+                }
+            } else if (cylinders && displacement) {
+                // ICE vehicle
+                engineType = `${displacement}L ${cylinders}-Cylinder`;
+                if (engineConfig) {
+                    engineType += ` ${engineConfig}`;
+                }
+            } else if (engineConfig) {
+                engineType = engineConfig;
+            } else {
+                engineType = fuelType || 'Unknown';
+            }
+
             return {
                 vin,
                 year,
                 make,
                 model,
-                trim: getValueFromResults(results, 'Trim') || getValueFromResults(results, 'Series'),
+                trim: getValueFromResults(results, 'Trim') || getValueFromResults(results, 'Series') || '',
                 engine: {
-                    type: getValueFromResults(results, 'Engine Configuration') ||
-                        `${getValueFromResults(results, 'Engine Number of Cylinders')} Cylinder`,
-                    displacement: getValueFromResults(results, 'Displacement (L)') + 'L',
+                    type: engineType,
+                    displacement: displacement ? `${displacement}L` : 'N/A',
                     horsepower: parseInt(getValueFromResults(results, 'Engine Brake (hp) From'), 10) || 0,
-                    torque: 0, // Not available from NHTSA
-                    fuelType: getValueFromResults(results, 'Fuel Type - Primary'),
+                    torque: 0,
+                    fuelType: fuelType || 'Unknown',
                 },
-                transmission: getValueFromResults(results, 'Transmission Style'),
-                drivetrain: getValueFromResults(results, 'Drive Type'),
-                exteriorColor: '', // Not available from NHTSA
-                interiorColor: '', // Not available from NHTSA
-                mileage: 0, // Not available from NHTSA
+                transmission: getValueFromResults(results, 'Transmission Style') || 'Unknown',
+                drivetrain: getValueFromResults(results, 'Drive Type') || 'Unknown',
+                exteriorColor: '',
+                interiorColor: '',
+                mileage: 0,
                 features: [],
                 imageUrl: undefined,
+                // Additional fields from NHTSA
+                bodyClass: getValueFromResults(results, 'Body Class'),
+                vehicleType: getValueFromResults(results, 'Vehicle Type'),
+                plantCountry: getValueFromResults(results, 'Plant Country'),
+                electrificationLevel: electrificationLevel,
             };
         } catch (error) {
             console.error('Error decoding VIN:', error);

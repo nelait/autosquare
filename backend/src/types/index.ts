@@ -16,6 +16,11 @@ export interface Vehicle {
     mileage: number;
     features: string[];
     imageUrl?: string;
+    // Optional NHTSA-specific fields
+    bodyClass?: string;
+    vehicleType?: string;
+    plantCountry?: string;
+    electrificationLevel?: string;
 }
 
 export interface EngineInfo {
