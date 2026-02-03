@@ -34,9 +34,15 @@ async function callTool(toolName, args) {
 
 /**
  * Diagnose vehicle symptoms using AI
+ * If vehicleVin is provided, backend will fetch NHTSA data and recalls for enhanced context
  */
-export async function diagnoseVehicle(symptoms, vehicleInfo = null) {
+export async function diagnoseVehicle(symptoms, vehicleInfo = null, vehicleVin = null) {
     const args = { symptoms };
+
+    // Pass VIN for backend to fetch NHTSA data and recalls
+    if (vehicleVin) {
+        args.vehicleVin = vehicleVin;
+    }
 
     if (vehicleInfo) {
         args.vehicleInfo = {

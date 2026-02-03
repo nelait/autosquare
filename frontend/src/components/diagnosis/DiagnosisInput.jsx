@@ -63,17 +63,22 @@ const DiagnosisInput = ({ onAnalyze, vehicleInfo, vehicleVin }) => {
         try {
             let results;
 
-            if (useAI && hasApiKey()) {
-                // Use OpenAI API
-                results = await analyzeVehicleSymptoms(symptoms, vehicleInfo);
-                // Add source flag
-                results = results.map((p, i) => ({
-                    ...p,
-                    id: p.id || `ai-${Date.now()}-${i}`,
-                    source: 'openai',
-                    matchedKeywords: [symptoms.split(' ')[0]], // For display
-                    adjustedConfidence: p.confidence
-                }));
+            if (useAI) {
+                // Use MCP backend - includes NHTSA/recall context when VIN provided
+                const { diagnoseVehicle } = await import('../../services/mcpClient');
+                const response = await diagnoseVehicle(symptoms, vehicleInfo, vehicleVin);
+
+                if (response?.problems) {
+                    results = response.problems.map((p, i) => ({
+                        ...p,
+                        id: p.id || `ai-${Date.now()}-${i}`,
+                        source: 'openai',
+                        matchedKeywords: [symptoms.split(' ')[0]],
+                        adjustedConfidence: p.confidence
+                    }));
+                } else {
+                    throw new Error('No diagnosis results received');
+                }
             } else {
                 // Use mock data fallback
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -85,8 +90,8 @@ const DiagnosisInput = ({ onAnalyze, vehicleInfo, vehicleVin }) => {
                 onAnalyze(results, symptoms);
             }
         } catch (err) {
-            setError(err.message || 'Failed to analyze symptoms');
-            console.error(err);
+            setError(err.message || 'Failed to analyze symptoms. Backend may be unavailable.');
+            console.error('Diagnosis error:', err);
         } finally {
             setIsAnalyzing(false);
         }

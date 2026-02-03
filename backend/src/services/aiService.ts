@@ -1,6 +1,6 @@
 // AI Service - OpenAI and Vertex AI Integration
 import OpenAI from 'openai';
-import type { Problem, RepairProcedure } from '../types/index.js';
+import type { Problem, RepairProcedure, Recall } from '../types/index.js';
 import { config } from '../config/index.js';
 import { getSecret, SecretNames } from '../config/secrets.js';
 
@@ -23,7 +23,8 @@ export const aiService = {
             model?: string;
             engine?: string;
             mileage?: number;
-        }
+        },
+        recalls?: Recall[]
     ): Promise<Problem[]> {
         const vehicleContext = vehicleInfo
             ? `Vehicle: ${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}
@@ -31,7 +32,19 @@ export const aiService = {
          Mileage: ${vehicleInfo.mileage || 'Unknown'} miles`
             : 'Vehicle information not provided';
 
+        // Build recall context if available
+        let recallContext = '';
+        if (recalls && recalls.length > 0) {
+            recallContext = `\n\nKNOWN RECALLS FOR THIS VEHICLE (${recalls.length} open recalls):
+${recalls.map((r, i) => `${i + 1}. [${r.campaignNumber}] ${r.component}: ${r.summary.substring(0, 200)}...
+   Risk: ${r.consequence?.substring(0, 100) || 'Not specified'}...`).join('\n')}
+
+IMPORTANT: If the reported symptoms could be related to any of these recalls, prioritize that as a possible cause and mention the recall campaign number.`;
+        }
+
         const systemPrompt = `You are an expert automotive diagnostic AI assistant. Analyze vehicle symptoms and provide detailed diagnostic information.
+
+${recallContext ? 'You have access to real NHTSA recall data for this specific vehicle. Use this information to provide more accurate diagnoses.' : ''}
 
 For each potential problem identified, provide:
 1. Problem name
@@ -42,6 +55,7 @@ For each potential problem identified, provide:
 6. Diagnostic steps
 7. Estimated repair cost range (min and max in USD)
 8. Estimated repair time
+9. If related to a recall, include the campaign number
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -55,18 +69,19 @@ Respond ONLY with valid JSON in this exact format:
       "symptoms": ["symptom1", "symptom2"],
       "diagnosticSteps": ["step1", "step2"],
       "estimatedCost": {"min": 100, "max": 500},
-      "estimatedTime": "1-2 hours"
+      "estimatedTime": "1-2 hours",
+      "recallCampaign": "24V051000 (optional - only if related to a recall)"
     }
   ]
 }
 
 Provide 2-5 most likely problems, ranked by confidence. Be specific and accurate.`;
 
-        const userPrompt = `${vehicleContext}
+        const userPrompt = `${vehicleContext}${recallContext}
 
 Customer reported symptoms: "${symptoms}"
 
-Analyze these symptoms and identify the most likely problems with this vehicle.`;
+Analyze these symptoms and identify the most likely problems with this vehicle. If any symptoms match known recalls, prioritize those as potential causes.`;
 
         if (config.aiProvider === 'openai') {
             const client = await getOpenAIClient();
