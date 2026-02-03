@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import VehicleCard from '../components/vehicle/VehicleCard';
 import { getVehicleByVin } from '../data/vehicles';
 import { getOpenRecalls } from '../data/recalls';
+import { lookupVehicle, getRecalls } from '../services/mcpClient';
 import './VehiclePage.css';
 
 const VehiclePage = () => {
@@ -12,22 +13,74 @@ const VehiclePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [openRecalls, setOpenRecalls] = useState([]);
+    const [isRealData, setIsRealData] = useState(false);
 
     useEffect(() => {
         const loadVehicle = async () => {
             setLoading(true);
             setError(null);
+            setIsRealData(false);
 
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // First check mock data (fast)
+            const mockVehicle = getVehicleByVin(vin);
 
-            const vehicleData = getVehicleByVin(vin);
-
-            if (vehicleData) {
-                setVehicle(vehicleData);
+            if (mockVehicle) {
+                setVehicle(mockVehicle);
                 setOpenRecalls(getOpenRecalls(vin));
-            } else {
-                setError('Vehicle not found. Please check the VIN and try again.');
+                setLoading(false);
+                return;
+            }
+
+            // Not in mock data - try real NHTSA API via backend
+            try {
+                const result = await lookupVehicle(vin);
+
+                if (result && result.vehicle) {
+                    // Transform NHTSA data to match our vehicle format
+                    const vehicleData = {
+                        vin: vin,
+                        make: result.vehicle.make || 'Unknown',
+                        model: result.vehicle.model || 'Unknown',
+                        year: result.vehicle.year || 'Unknown',
+                        trim: result.vehicle.trim || '',
+                        engine: {
+                            type: result.vehicle.engineType || result.vehicle.fuelType || 'Unknown',
+                            horsepower: result.vehicle.horsepower || 'N/A',
+                            torque: 'N/A',
+                            fuelType: result.vehicle.fuelType || 'Unknown'
+                        },
+                        transmission: result.vehicle.transmission || 'Unknown',
+                        drivetrain: result.vehicle.driveType || 'Unknown',
+                        bodyType: result.vehicle.bodyClass || 'Unknown',
+                        exteriorColor: 'Not Available',
+                        interiorColor: 'Not Available',
+                        mileage: 'Unknown',
+                        image: getDefaultImage(result.vehicle.make),
+                        features: []
+                    };
+
+                    setVehicle(vehicleData);
+                    setIsRealData(true);
+
+                    // Also fetch real recalls
+                    try {
+                        const recallsResult = await getRecalls({
+                            make: vehicleData.make,
+                            model: vehicleData.model,
+                            year: vehicleData.year
+                        });
+                        if (recallsResult && recallsResult.recalls) {
+                            setOpenRecalls(recallsResult.recalls);
+                        }
+                    } catch (recallErr) {
+                        console.log('Could not fetch recalls:', recallErr);
+                    }
+                } else {
+                    setError('Vehicle not found. Please check the VIN and try again.');
+                }
+            } catch (err) {
+                console.error('VIN lookup error:', err);
+                setError('Could not look up vehicle. The backend may be unavailable.');
             }
 
             setLoading(false);
@@ -36,12 +89,25 @@ const VehiclePage = () => {
         loadVehicle();
     }, [vin]);
 
+    // Get a default image based on make
+    const getDefaultImage = (make) => {
+        const makeImages = {
+            'Tesla': 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+            'Honda': 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80',
+            'Toyota': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80',
+            'Ford': 'https://images.unsplash.com/photo-1590739225287-bd31519780c3?w=800&q=80',
+            'BMW': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80',
+            'Chevrolet': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80',
+        };
+        return makeImages[make] || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80';
+    };
+
     if (loading) {
         return (
             <div className="vehicle-page loading-state">
                 <div className="loader">
                     <div className="loader-spinner"></div>
-                    <p>Loading vehicle details...</p>
+                    <p>Looking up vehicle...</p>
                 </div>
             </div>
         );
@@ -59,7 +125,7 @@ const VehiclePage = () => {
                         <button onClick={() => navigate(-1)} className="btn btn-secondary">
                             Go Back
                         </button>
-                        <Link to="/" className="btn btn-primary">
+                        <Link to="/lookup" className="btn btn-primary">
                             Try Another VIN
                         </Link>
                     </div>
@@ -81,6 +147,12 @@ const VehiclePage = () => {
                         <span>Vehicle Details</span>
                     </div>
                 </div>
+
+                {isRealData && (
+                    <div className="data-source-badge glass-card animate-fade-in">
+                        <span>✓</span> Real-time data from NHTSA
+                    </div>
+                )}
 
                 {openRecalls.length > 0 && (
                     <div className="recall-alert glass-card animate-fade-in">
