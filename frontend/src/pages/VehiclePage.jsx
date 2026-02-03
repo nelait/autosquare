@@ -28,6 +28,8 @@ const VehiclePage = () => {
                 setVehicle(mockVehicle);
                 setOpenRecalls(getOpenRecalls(vin));
                 setLoading(false);
+                // Save VIN for diagnosis page pre-population
+                try { localStorage.setItem('lastDiagnosisVin', vin); } catch (e) { }
                 return;
             }
 
@@ -64,6 +66,8 @@ const VehiclePage = () => {
 
                     setVehicle(vehicleData);
                     setIsRealData(true);
+                    // Save VIN for diagnosis page pre-population
+                    try { localStorage.setItem('lastDiagnosisVin', vin); } catch (e) { }
 
                     // Also fetch real recalls
                     try {
