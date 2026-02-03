@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import RecallsList from '../components/recalls/RecallsList';
 import { getVehicleByVin } from '../data/vehicles';
 import { getRecallsByVin } from '../data/recalls';
+import { lookupVehicle, getRecalls } from '../services/mcpClient';
 import './RecallsPage.css';
 
 const RecallsPage = () => {
@@ -12,22 +13,84 @@ const RecallsPage = () => {
     const [recalls, setRecalls] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const [isRealData, setIsRealData] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 300));
+            setIsRealData(false);
 
-            const vehicleData = getVehicleByVin(vin);
-            const recallsData = getRecallsByVin(vin);
+            // First try mock data
+            const mockVehicle = getVehicleByVin(vin);
+            const mockRecalls = getRecallsByVin(vin);
 
-            setVehicle(vehicleData);
-            setRecalls(recallsData);
+            if (mockVehicle && mockRecalls.length > 0) {
+                // Use mock data if available
+                setVehicle(mockVehicle);
+                setRecalls(mockRecalls);
+                setLoading(false);
+                return;
+            }
+
+            // Try real API for vehicle and recalls
+            try {
+                let vehicleData = mockVehicle;
+
+                // Get vehicle info if not in mock data
+                if (!vehicleData) {
+                    const vehicleResult = await lookupVehicle(vin);
+                    if (vehicleResult?.vehicle) {
+                        const v = vehicleResult.vehicle;
+                        vehicleData = {
+                            vin: vin,
+                            make: v.make,
+                            model: v.model,
+                            year: v.year,
+                            image: getDefaultImage(v.make)
+                        };
+                    }
+                }
+
+                setVehicle(vehicleData);
+
+                // Get real recalls from NHTSA
+                if (vehicleData) {
+                    const recallsResult = await getRecalls({
+                        make: vehicleData.make,
+                        model: vehicleData.model,
+                        year: vehicleData.year
+                    });
+
+                    if (recallsResult?.recalls && recallsResult.recalls.length > 0) {
+                        setRecalls(recallsResult.recalls);
+                        setIsRealData(true);
+                    } else {
+                        // No real recalls found
+                        setRecalls([]);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching recalls:', error);
+                // Fall back to any mock data we have
+                setRecalls(mockRecalls);
+            }
+
             setLoading(false);
         };
 
         loadData();
     }, [vin]);
+
+    const getDefaultImage = (make) => {
+        const makeImages = {
+            'Tesla': 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+            'TESLA': 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+            'Honda': 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80',
+            'Toyota': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80',
+            'Ford': 'https://images.unsplash.com/photo-1590739225287-bd31519780c3?w=800&q=80',
+        };
+        return makeImages[make] || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80';
+    };
 
     const filteredRecalls = filter === 'all'
         ? recalls
@@ -41,7 +104,7 @@ const RecallsPage = () => {
             <div className="recalls-page loading-state">
                 <div className="loader">
                     <div className="loader-spinner"></div>
-                    <p>Loading recalls...</p>
+                    <p>Loading recalls from NHTSA...</p>
                 </div>
             </div>
         );
@@ -72,8 +135,14 @@ const RecallsPage = () => {
                         />
                         <div className="summary-info">
                             <h2>{vehicle.year} {vehicle.make} {vehicle.model}</h2>
-                            <code>{vehicle.vin}</code>
+                            <code>{vehicle.vin || vin}</code>
                         </div>
+                    </div>
+                )}
+
+                {isRealData && (
+                    <div className="data-source-badge glass-card">
+                        <span>✓</span> Real-time data from NHTSA
                     </div>
                 )}
 
@@ -116,7 +185,15 @@ const RecallsPage = () => {
                     </button>
                 </div>
 
-                <RecallsList recalls={filteredRecalls} />
+                {recalls.length === 0 ? (
+                    <div className="no-recalls glass-card">
+                        <span className="check-icon">✓</span>
+                        <h3>No Recalls Found</h3>
+                        <p>Great news! No safety recalls have been reported for this vehicle.</p>
+                    </div>
+                ) : (
+                    <RecallsList recalls={filteredRecalls} />
+                )}
             </div>
         </div>
     );
