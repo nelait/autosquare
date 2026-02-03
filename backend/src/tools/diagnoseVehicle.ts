@@ -116,9 +116,14 @@ export async function diagnoseVehicle(
         });
     }
 
+    // Track if recall data was used in analysis
+    const recallDataUsed = recalls.length > 0;
+
     return {
         problems,
         sessionId,
         analyzedAt: new Date().toISOString(),
+        recallDataUsed,
+        recallCount: recalls.length,
     };
 }

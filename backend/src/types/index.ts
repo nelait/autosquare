@@ -57,6 +57,8 @@ export interface DiagnosisResponse {
     problems: Problem[];
     sessionId: string;
     analyzedAt: string;
+    recallDataUsed?: boolean;
+    recallCount?: number;
 }
 
 export interface RepairPart {
