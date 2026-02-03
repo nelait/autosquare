@@ -8,7 +8,18 @@ import './DiagnosisPage.css';
 
 const DiagnosisPage = () => {
     const { vin: urlVin } = useParams();
-    const [inputVin, setInputVin] = useState(urlVin || '');
+
+    // Get initial VIN: URL param > localStorage > empty
+    const getInitialVin = () => {
+        if (urlVin) return urlVin;
+        try {
+            return localStorage.getItem('lastDiagnosisVin') || '';
+        } catch {
+            return '';
+        }
+    };
+
+    const [inputVin, setInputVin] = useState(getInitialVin);
     const [vehicle, setVehicle] = useState(null);
     const [problems, setProblems] = useState([]);
     const [hasAnalyzed, setHasAnalyzed] = useState(false);
@@ -16,6 +27,17 @@ const DiagnosisPage = () => {
     const [recallDataUsed, setRecallDataUsed] = useState(false);
     const [isLoadingVehicle, setIsLoadingVehicle] = useState(false);
     const [vinError, setVinError] = useState('');
+
+    // Save VIN to localStorage when it's a valid 17-char VIN
+    useEffect(() => {
+        if (inputVin && inputVin.length === 17) {
+            try {
+                localStorage.setItem('lastDiagnosisVin', inputVin);
+            } catch (e) {
+                console.warn('Could not save VIN to localStorage:', e);
+            }
+        }
+    }, [inputVin]);
 
     // Load vehicle data when VIN changes
     useEffect(() => {
