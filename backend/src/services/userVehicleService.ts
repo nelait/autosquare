@@ -24,12 +24,12 @@ export async function getUserVehicles(userId: string): Promise<UserVehicle[]> {
     try {
         const db = getFirestore();
 
+        // Simple query without orderBy to avoid composite index requirement
         const snapshot = await db.collection(COLLECTION)
             .where('userId', '==', userId)
-            .orderBy('lastUsedAt', 'desc')
             .get();
 
-        return snapshot.docs.map(doc => {
+        const vehicles = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -43,6 +43,15 @@ export async function getUserVehicles(userId: string): Promise<UserVehicle[]> {
                 lastUsedAt: data.lastUsedAt?.toDate(),
             };
         });
+
+        // Sort in memory by lastUsedAt descending
+        vehicles.sort((a, b) => {
+            const aTime = a.lastUsedAt?.getTime() || 0;
+            const bTime = b.lastUsedAt?.getTime() || 0;
+            return bTime - aTime;
+        });
+
+        return vehicles;
     } catch (error) {
         console.error('[UserVehicles] Failed to get vehicles:', error);
         return [];
