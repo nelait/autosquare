@@ -11,7 +11,9 @@ export type AuditAction =
     | 'RECALL_CHECK'
     | 'VEHICLE_ADDED'
     | 'VEHICLE_REMOVED'
-    | 'REPAIR_PROCEDURE';
+    | 'REPAIR_PROCEDURE'
+    | 'SERVICE_LOG_ADDED'
+    | 'SERVICE_DOC_PARSED';
 
 export interface AuditLogEntry {
     userId: string;

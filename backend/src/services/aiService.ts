@@ -24,7 +24,8 @@ export const aiService = {
             engine?: string;
             mileage?: number;
         },
-        recalls?: Recall[]
+        recalls?: Recall[],
+        serviceLogsContext?: string | null
     ): Promise<Problem[]> {
         const vehicleContext = vehicleInfo
             ? `Vehicle: ${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}
@@ -42,9 +43,15 @@ ${recalls.map((r, i) => `${i + 1}. [${r.campaignNumber}] ${r.component}: ${r.sum
 IMPORTANT: If the reported symptoms could be related to any of these recalls, prioritize that as a possible cause and mention the recall campaign number.`;
         }
 
+        // Build service history context if available
+        let serviceContext = '';
+        if (serviceLogsContext) {
+            serviceContext = `\n\n${serviceLogsContext}\n\nIMPORTANT: Consider the vehicle's service history when diagnosing. Recent repairs may be relevant to current symptoms.`;
+        }
+
         const systemPrompt = `You are an expert automotive diagnostic AI assistant. Analyze vehicle symptoms and provide detailed diagnostic information.
 
-${recallContext ? 'You have access to real NHTSA recall data for this specific vehicle. Use this information to provide more accurate diagnoses.' : ''}
+${recallContext ? 'You have access to real NHTSA recall data for this specific vehicle. Use this information to provide more accurate diagnoses.' : ''}${serviceLogsContext ? ' You also have access to this vehicle\'s service history.' : ''}
 
 For each potential problem identified, provide:
 1. Problem name
@@ -77,11 +84,11 @@ Respond ONLY with valid JSON in this exact format:
 
 Provide 2-5 most likely problems, ranked by confidence. Be specific and accurate.`;
 
-        const userPrompt = `${vehicleContext}${recallContext}
+        const userPrompt = `${vehicleContext}${recallContext}${serviceContext}
 
 Customer reported symptoms: "${symptoms}"
 
-Analyze these symptoms and identify the most likely problems with this vehicle. If any symptoms match known recalls, prioritize those as potential causes.`;
+Analyze these symptoms and identify the most likely problems with this vehicle. If any symptoms match known recalls, prioritize those as potential causes. Consider the service history if available.`;
 
         if (config.aiProvider === 'openai') {
             const client = await getOpenAIClient();
@@ -187,6 +194,78 @@ Provide a detailed repair procedure for fixing this problem.`;
             }
 
             return JSON.parse(jsonMatch[0]);
+        } else {
+            // TODO: Implement Vertex AI
+            throw new Error('Vertex AI not yet implemented');
+        }
+    },
+
+    /**
+     * Parse service document text and extract structured service records
+     */
+    async parseServiceDocument(
+        documentText: string
+    ): Promise<Array<{
+        date: string;
+        description: string;
+        category: string;
+        mileage?: number;
+        cost?: number;
+    }>> {
+        const systemPrompt = `You are an expert at parsing automotive service documents. Extract service records from the provided text.
+
+For each service record found, extract:
+1. Date (convert to YYYY-MM-DD format)
+2. Description of service performed
+3. Category (maintenance, repair, inspection, recall, or other)
+4. Mileage at time of service (if mentioned)
+5. Cost (if mentioned, in USD)
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "records": [
+    {
+      "date": "2024-01-15",
+      "description": "Oil change and filter replacement",
+      "category": "maintenance",
+      "mileage": 45000,
+      "cost": 89.99
+    }
+  ]
+}
+
+If no service records can be found, return: {"records": []}
+Be thorough and extract ALL service records from the document.`;
+
+        const userPrompt = `Parse the following service document and extract all service records:
+
+${documentText}`;
+
+        if (config.aiProvider === 'openai') {
+            const client = await getOpenAIClient();
+
+            const response = await client.chat.completions.create({
+                model: config.openaiModel,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                ],
+                temperature: 0.3, // Lower temp for more consistent extraction
+                max_tokens: 3000,
+            });
+
+            const content = response.choices[0]?.message?.content;
+            if (!content) {
+                throw new Error('Empty response from AI');
+            }
+
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+                throw new Error('Invalid response format from AI');
+            }
+
+            const result = JSON.parse(jsonMatch[0]);
+            return result.records || [];
         } else {
             // TODO: Implement Vertex AI
             throw new Error('Vertex AI not yet implemented');

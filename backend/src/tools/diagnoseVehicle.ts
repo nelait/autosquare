@@ -1,10 +1,11 @@
-// Diagnose Vehicle Tool - Enhanced with VIN/Recall context
+// Diagnose Vehicle Tool - Enhanced with VIN/Recall context and Service History
 import { z } from 'zod';
 import type { DiagnosisResponse, Problem, Recall } from '../types/index.js';
 import { aiService } from '../services/aiService.js';
 import { sessionService } from '../services/sessionService.js';
 import { nhtsaClient } from '../integrations/nhtsa/client.js';
 import { config } from '../config/index.js';
+import { serviceLogService } from '../services/serviceLogService.js';
 
 export const DiagnoseVehicleSchema = {
     type: 'object' as const,
@@ -45,7 +46,8 @@ const InputSchema = z.object({
 });
 
 export async function diagnoseVehicle(
-    args: Record<string, unknown>
+    args: Record<string, unknown>,
+    userId?: string
 ): Promise<DiagnosisResponse> {
     const startTime = Date.now();
 
@@ -57,6 +59,7 @@ export async function diagnoseVehicle(
 
     let vehicleInfo = input.vehicleInfo;
     let recalls: Recall[] = [];
+    let serviceLogsContext: string | null = null;
 
     // If VIN provided, fetch real vehicle data from NHTSA
     if (input.vehicleVin) {
@@ -88,13 +91,26 @@ export async function diagnoseVehicle(
             console.warn('[diagnoseVehicle] Could not decode VIN:', vinError);
             // Continue with provided vehicleInfo if any
         }
+
+        // Fetch service logs if user is authenticated
+        if (userId) {
+            try {
+                serviceLogsContext = await serviceLogService.getServiceLogsForAI(userId, input.vehicleVin);
+                if (serviceLogsContext) {
+                    console.log(`[diagnoseVehicle] Including service history in diagnosis context`);
+                }
+            } catch (serviceError) {
+                console.warn('[diagnoseVehicle] Could not fetch service logs:', serviceError);
+            }
+        }
     }
 
-    // Call AI service for diagnosis with enhanced context
+    // Call AI service for diagnosis with enhanced context (including service logs)
     const problems = await aiService.analyzeSymptoms(
         input.symptoms,
         vehicleInfo,
-        recalls
+        recalls,
+        serviceLogsContext
     );
 
     const latencyMs = Date.now() - startTime;
@@ -103,7 +119,7 @@ export async function diagnoseVehicle(
     if (config.enableSessionStorage) {
         await sessionService.saveSession({
             sessionId,
-            userId: 'anonymous', // Will be replaced with real user ID from auth
+            userId: userId || 'anonymous',
             vin: input.vehicleVin,
             symptoms: input.symptoms,
             inputMethod: 'text',
@@ -116,8 +132,9 @@ export async function diagnoseVehicle(
         });
     }
 
-    // Track if recall data was used in analysis
+    // Track if recall data and service logs were used in analysis
     const recallDataUsed = recalls.length > 0;
+    const serviceLogsUsed = serviceLogsContext !== null;
 
     return {
         problems,
@@ -125,5 +142,6 @@ export async function diagnoseVehicle(
         analyzedAt: new Date().toISOString(),
         recallDataUsed,
         recallCount: recalls.length,
+        serviceLogsUsed,
     };
 }

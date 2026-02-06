@@ -59,6 +59,7 @@ export interface DiagnosisResponse {
     analyzedAt: string;
     recallDataUsed?: boolean;
     recallCount?: number;
+    serviceLogsUsed?: boolean;
 }
 
 export interface RepairPart {

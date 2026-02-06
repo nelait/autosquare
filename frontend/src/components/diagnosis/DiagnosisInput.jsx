@@ -63,6 +63,7 @@ const DiagnosisInput = ({ onAnalyze, vehicleInfo, vehicleVin }) => {
         try {
             let results;
             let recallDataUsed = false;
+            let serviceLogsUsed = false;
 
             if (useAI) {
                 // Use MCP backend - includes NHTSA/recall context when VIN provided
@@ -78,6 +79,7 @@ const DiagnosisInput = ({ onAnalyze, vehicleInfo, vehicleVin }) => {
                         adjustedConfidence: p.confidence
                     }));
                     recallDataUsed = response.recallDataUsed || false;
+                    serviceLogsUsed = response.serviceLogsUsed || false;
                 } else {
                     throw new Error('No diagnosis results received');
                 }
@@ -89,7 +91,7 @@ const DiagnosisInput = ({ onAnalyze, vehicleInfo, vehicleVin }) => {
             }
 
             if (onAnalyze) {
-                onAnalyze(results, symptoms, recallDataUsed);
+                onAnalyze(results, symptoms, recallDataUsed, serviceLogsUsed);
             }
         } catch (err) {
             setError(err.message || 'Failed to analyze symptoms. Backend may be unavailable.');

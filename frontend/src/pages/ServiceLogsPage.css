@@ -1,88 +1,65 @@
 .service-page {
     min-height: calc(100vh - 80px);
-    padding: var(--spacing-xl) 0;
+    padding: var(--spacing-xl) 0 var(--spacing-3xl);
 }
 
 .service-page .container {
     max-width: 900px;
 }
 
-.service-page.loading-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.loader {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-lg);
-}
-
-.loader-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid var(--color-surface);
-    border-top-color: var(--color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.page-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
+.service-page .page-header {
     margin-bottom: var(--spacing-xl);
 }
 
-.back-btn {
+.service-page .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+    text-decoration: none;
+    transition: color var(--transition-normal);
     background: none;
     border: none;
-    color: var(--color-text-secondary);
     cursor: pointer;
+    padding: 0;
     font-size: 1rem;
-    padding: var(--spacing-sm);
-    transition: color var(--transition-normal);
 }
 
-.back-btn:hover {
+.service-page .back-btn:hover {
     color: var(--color-text);
 }
 
 .page-breadcrumb {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     font-size: 0.9rem;
     color: var(--color-text-muted);
 }
 
 .page-breadcrumb a {
-    color: var(--color-text-secondary);
+    color: var(--color-primary);
+    text-decoration: none;
 }
 
 .page-breadcrumb a:hover {
-    color: var(--color-primary-light);
+    text-decoration: underline;
 }
 
 .vehicle-summary {
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
 }
 
 .summary-image {
     width: 100px;
-    height: 70px;
+    height: 60px;
     object-fit: cover;
     border-radius: var(--radius-md);
-}
-
-.summary-info {
-    flex: 1;
 }
 
 .summary-info h2 {
@@ -91,56 +68,332 @@
 }
 
 .summary-info code {
-    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    background: var(--color-surface-light);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.summary-mileage {
+    margin-left: auto;
+    text-align: center;
+}
+
+.mileage-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.mileage-label {
     font-size: 0.8rem;
     color: var(--color-text-muted);
 }
 
-.summary-mileage {
+/* Alerts */
+.alert {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
 }
 
-.mileage-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-primary-light);
+.alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
 }
 
-.mileage-label {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+.alert-success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
 }
 
+.alert-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    opacity: 0.7;
+    color: inherit;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+/* Service Header */
 .service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
 }
 
-.service-header h1 {
+.service-title h1 {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 1.75rem;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
 }
 
 .service-subtitle {
     color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.service-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    border: none;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+    background: var(--color-surface-light);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Upload Section */
+.upload-section {
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.upload-section h3 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.upload-hint {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.upload-area input[type="file"] {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-light);
+    cursor: pointer;
+}
+
+.upload-progress {
+    margin-top: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+/* Paste Area */
+.paste-area {
+    margin-bottom: var(--spacing-md);
+}
+
+.paste-area textarea {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.paste-area textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.paste-area textarea::placeholder {
+    color: var(--color-text-muted);
+    white-space: pre-line;
+}
+
+.parse-btn {
+    margin-top: var(--spacing-sm);
+}
+
+.upload-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+    color: var(--color-text-muted);
+}
+
+.upload-divider::before,
+.upload-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.upload-divider span {
+    font-size: 0.85rem;
+}
+
+.upload-note {
+    margin-top: var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* Add Log Form */
+.add-log-form {
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.add-log-form h3 {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+/* Loading state */
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+}
+
+.loader {
+    text-align: center;
+}
+
+.loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--spacing-md);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 640px) {
+    .service-header {
+        flex-direction: column;
+    }
+
+    .service-actions {
+        width: 100%;
+    }
+
+    .service-actions button {
+        flex: 1;
+    }
+
     .vehicle-summary {
         flex-direction: column;
         text-align: center;
     }
 
     .summary-mileage {
-        width: 100%;
+        margin-left: 0;
     }
 }

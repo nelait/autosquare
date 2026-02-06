@@ -177,6 +177,45 @@ export async function checkHealth() {
 /**
  * Get available tools from the backend
  */
+// ==================== SERVICE LOGS ====================
+
+/**
+ * Get service logs for a vehicle
+ */
+export async function getServiceLogs(vin) {
+    return callTool('get_service_logs', { vin });
+}
+
+/**
+ * Add a service log entry manually
+ */
+export async function addServiceLog(vin, date, description, category = 'other', mileage, cost) {
+    return callTool('add_service_log', {
+        vin,
+        date,
+        description,
+        category,
+        ...(mileage && { mileage }),
+        ...(cost && { cost }),
+    });
+}
+
+/**
+ * Parse a service document and extract log entries
+ */
+export async function parseServiceDocument(vin, documentText) {
+    return callTool('parse_service_document', { vin, documentText });
+}
+
+/**
+ * Delete a service log entry
+ */
+export async function deleteServiceLog(logId) {
+    return callTool('delete_service_log', { logId });
+}
+
+// ==================== UTILS ====================
+
 export async function getAvailableTools() {
     const response = await fetch(`${MCP_SERVER_URL}/api/tools`);
     if (!response.ok) {
@@ -194,6 +233,10 @@ export default {
     addMyVehicle,
     removeMyVehicle,
     updateVehicleNickname,
+    getServiceLogs,
+    addServiceLog,
+    parseServiceDocument,
+    deleteServiceLog,
     checkHealth,
     getAvailableTools,
     logAuthEvent,

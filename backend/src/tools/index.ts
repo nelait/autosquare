@@ -14,6 +14,13 @@ import {
     RemoveMyVehicleSchema,
     UpdateVehicleNicknameSchema,
 } from './userVehicleTools.js';
+import {
+    getServiceLogs,
+    addServiceLog,
+    parseServiceDocument,
+    deleteServiceLog,
+    serviceLogTools,
+} from './serviceLogTools.js';
 import { logUserAction, AuditAction } from '../services/auditService.js';
 import { AuthUser } from '../auth/middleware.js';
 
@@ -60,6 +67,8 @@ export function registerTools(): Tool[] {
             description: 'Update the nickname of a saved vehicle.',
             inputSchema: UpdateVehicleNicknameSchema,
         },
+        // Service log tools
+        ...serviceLogTools,
     ];
 }
 
@@ -87,7 +96,7 @@ export async function handleToolCall(
 
     switch (name) {
         case 'diagnose_vehicle':
-            result = await diagnoseVehicle(args);
+            result = await diagnoseVehicle(args, user?.uid);
             break;
         case 'get_repair_procedure':
             result = await getRepairProcedure(args);
@@ -114,6 +123,22 @@ export async function handleToolCall(
             if (!user) throw new Error('Authentication required');
             result = await updateMyVehicleNickname(args, user);
             break;
+        case 'get_service_logs':
+            if (!user) throw new Error('Authentication required');
+            result = await getServiceLogs(args, user.uid);
+            break;
+        case 'add_service_log':
+            if (!user) throw new Error('Authentication required');
+            result = await addServiceLog(args, user.uid, user.email);
+            break;
+        case 'parse_service_document':
+            if (!user) throw new Error('Authentication required');
+            result = await parseServiceDocument(args, user.uid, user.email);
+            break;
+        case 'delete_service_log':
+            if (!user) throw new Error('Authentication required');
+            result = await deleteServiceLog(args, user.uid);
+            break;
         default:
             throw new Error(`Unknown tool: ${name}`);
     }
@@ -137,6 +162,8 @@ function getAuditAction(toolName: string): AuditAction | null {
         'get_repair_procedure': 'REPAIR_PROCEDURE',
         'add_my_vehicle': 'VEHICLE_ADDED',
         'remove_my_vehicle': 'VEHICLE_REMOVED',
+        'add_service_log': 'SERVICE_LOG_ADDED',
+        'parse_service_document': 'SERVICE_DOC_PARSED',
     };
     return mapping[toolName] || null;
 }

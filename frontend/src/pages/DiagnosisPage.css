@@ -219,31 +219,42 @@
     font-weight: 500;
 }
 
+/* Data Badges Container */
+.data-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
 /* Recall Data Badge */
-.recall-data-badge {
+.recall-data-badge,
+.service-logs-badge {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
     border-radius: var(--radius-full);
     font-size: 0.9rem;
     font-weight: 500;
 }
 
-.recall-data-badge.has-recall-data {
+.recall-data-badge.has-recall-data,
+.service-logs-badge.has-service-logs {
     background: rgba(34, 197, 94, 0.15);
     border: 1px solid rgba(34, 197, 94, 0.3);
     color: #22c55e;
 }
 
-.recall-data-badge.no-recall-data {
+.recall-data-badge.no-recall-data,
+.service-logs-badge.no-service-logs {
     background: rgba(156, 163, 175, 0.15);
     border: 1px solid rgba(156, 163, 175, 0.3);
     color: #9ca3af;
 }
 
-.recall-data-badge .badge-icon {
+.recall-data-badge .badge-icon,
+.service-logs-badge .badge-icon {
     font-weight: bold;
 }
 

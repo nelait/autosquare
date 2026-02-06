@@ -25,6 +25,7 @@ const DiagnosisPage = () => {
     const [hasAnalyzed, setHasAnalyzed] = useState(false);
     const [analyzedSymptoms, setAnalyzedSymptoms] = useState('');
     const [recallDataUsed, setRecallDataUsed] = useState(false);
+    const [serviceLogsUsed, setServiceLogsUsed] = useState(false);
     const [isLoadingVehicle, setIsLoadingVehicle] = useState(false);
     const [vinError, setVinError] = useState('');
 
@@ -86,11 +87,12 @@ const DiagnosisPage = () => {
         return () => clearTimeout(timeoutId);
     }, [inputVin]);
 
-    const handleAnalysis = (results, symptoms, usedRecallData) => {
+    const handleAnalysis = (results, symptoms, usedRecallData, usedServiceLogs) => {
         setProblems(results);
         setHasAnalyzed(true);
         setAnalyzedSymptoms(symptoms);
         setRecallDataUsed(usedRecallData || false);
+        setServiceLogsUsed(usedServiceLogs || false);
     };
 
     const handleVinChange = (e) => {
@@ -168,19 +170,34 @@ const DiagnosisPage = () => {
 
                 {hasAnalyzed && (
                     <div className="results-section">
-                        {/* Recall Data Badge */}
-                        <div className={`recall-data-badge ${recallDataUsed ? 'has-recall-data' : 'no-recall-data'}`}>
-                            {recallDataUsed ? (
-                                <>
-                                    <span className="badge-icon">✓</span>
-                                    <span>Recall Data Considered</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="badge-icon">○</span>
-                                    <span>Recall Data N/A</span>
-                                </>
-                            )}
+                        {/* Data Context Badges */}
+                        <div className="data-badges">
+                            <div className={`recall-data-badge ${recallDataUsed ? 'has-recall-data' : 'no-recall-data'}`}>
+                                {recallDataUsed ? (
+                                    <>
+                                        <span className="badge-icon">✓</span>
+                                        <span>Recall Data Considered</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="badge-icon">○</span>
+                                        <span>Recall Data N/A</span>
+                                    </>
+                                )}
+                            </div>
+                            <div className={`service-logs-badge ${serviceLogsUsed ? 'has-service-logs' : 'no-service-logs'}`}>
+                                {serviceLogsUsed ? (
+                                    <>
+                                        <span className="badge-icon">✓</span>
+                                        <span>Service History Considered</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="badge-icon">○</span>
+                                        <span>Service History N/A</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {analyzedSymptoms && (
